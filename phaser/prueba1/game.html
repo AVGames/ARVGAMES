@@ -1,0 +1,208 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+	<meta charset="UTF-8" />
+	<title>Phaser Game</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+	<script type="text/javascript" src='js/phaser.js'></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+	var game = new Phaser.Game(800,600,Phaser.Auto,'' ,{preload: preload, create: create , update: update});
+
+	function preload() {
+		game.load.image('sky', 'assets/sky.png');
+		game.load.image('ground', 'assets/platform.png');
+		game.load.image('star', 'assets/star.png');
+		game.load.spritesheet('dude','assets/dude.png',32,48);
+		game.load.spritesheet('baddie', 'assets/baddie.png',32,32);
+
+	}
+
+	var player;
+	var platforms;
+	var cursors;
+	var baddie;
+	var stars;
+	var score = 0;
+	var scoreText;
+	var baddiesize;
+	game.giro = 32;
+
+	function create() {
+
+		//we are going to be using physics, so enable de arcade physics system
+		game.physics.startSystem(Phaser.Physics.ARCADE);
+		// a simple background for our game 
+		game.add.sprite(0, 0 ,'sky');
+		// we neew a platform, a grup that contains the ground and 2 ledges we can jump on 
+		platforms = game.add.group();
+		// we will enable physics for any object that created in this gruup 
+		platforms.enableBody = true; 
+		// here we create the groudn 
+		var ground = platforms.create(0,game.world.height - 64, 'ground');
+		// the scale it fit the width of the game ( the original sprite is 400x32 size)
+		ground.scale.setTo(2,2);
+		// this stops it from falling away when you jum
+		ground.body.immovable = true;
+
+		var ledge = platforms.create(400,400, 'ground');
+
+		ledge.body.immovable = true;
+
+		ledge = platforms.create(-150,250, 'ground');
+
+		ledge.body.immovable = true;
+
+		// the player and his setting
+		player = game.add.sprite(32,game.world.height -150 ,'dude');
+		// aply physic to our player remember set physics to every object 
+		game.physics.arcade.enable(player);
+		// player physic properties give the dde a sligth bounce
+		player.body.bounce.y = 0.2;
+		player.body.gravity.y = 700;
+		player.body.collideWorldBounds = true;
+
+		// our two animations , walking left and rigth
+		player.animations.add('left',[0,1,2,3],10,true);
+		player.animations.add('right',[5, 6, 7, 8], 10, true);
+
+		// create a baddie
+		baddie = game.add.sprite(125,game.world.height -150,'baddie');
+		Phaser.Tween(baddie,0,0);
+
+		// aply physics 
+		game.physics.arcade.enable(baddie);
+		// baddie physic properties
+		baddie.body.bounce.y = 1;
+		baddie.body.gravity.y = 300;
+		baddie.body.collideWorldBounds = true;
+    
+   		baddie.body.collideWorldBounds = true;
+
+		baddie.animations.add('left',[0,1],5,true);
+		baddie.animations.add('right',[2,3], 5, true);
+		// render stars 
+		stars = game.add.group();
+
+		// we will enable physic for any star that is created 
+
+		stars.enableBody = true;
+
+		// here we'll create 12 of then evently spaced apart 
+		for (var i = 0; i < 12; i++){
+			// create a star inside of the stars grpu 
+			var star = stars.create(i * 70 , 0 ,'star');
+
+			// set gravity 
+			star.body.gravity.y = 800;
+
+			// this just gives each star a sligthy ramdom bpunce 
+
+			star.body.bounce.y = 0.7 + Math.random() * 0.2;
+		}
+
+		//score count 
+
+		scoreText = game.add.text(16, 16, 'score: 0', { fontSize: '32px', fill: '#000' });
+
+		//  Our controls.
+    	cursors = game.input.keyboard.createCursorKeys();
+
+  	}
+
+	function update() {
+		 //  Collide the player and the stars with the platforms
+
+		game.physics.arcade.collide(player,platforms);
+		game.physics.arcade.collide(stars,platforms);
+		game.physics.arcade.collide(baddie,platforms);
+
+		//chek if the player overlaps with baddie;
+
+		game.physics.arcade.overlap(player,baddie,lose,null,this);
+
+
+		// chek to see if the player overlaps with any star , if does call colectfunction 
+
+		game.physics.arcade.overlap(player,stars,collectStar,null,this);
+
+		 //  Reset the players velocity (movement)
+   		player.body.velocity.x = 0;
+   		baddie.body.velocity.x = 0;
+
+   		if (baddie.position.x <= 300 && baddie.position.x  >= 40){
+   			baddie.body.velocity.x = -150;
+   		}
+
+   		 console.log(baddie.body.velocity.x);
+   		 console.log(baddie.position.x);
+
+   		
+   		// player movements 
+		if (cursors.left.isDown)
+    	{
+        	//  Move to the left
+        	player.body.velocity.x = -200;
+
+        	player.animations.play('left');
+    	}
+    	else if (cursors.right.isDown)
+    	{
+    	    //  Move to the right
+    	    player.body.velocity.x = 200;
+
+        	player.animations.play('right');
+    	}
+    	else if (cursors.down.isDown) {
+
+    			player.body.velocity.y = 400;
+    			
+    		}	
+    	else
+    	{
+    	    //  Stand still
+    	    player.animations.stop();
+
+        	player.frame = 4;
+    	}	
+    
+    	//  Allow the player to jump if they are touching 	the ground.
+    	if (cursors.up.isDown && player.body.touching.down)
+    	{
+    	    player.body.velocity.y = -500;
+    	}
+
+
+	}
+
+	function collectStar (player, star) {
+    
+    // Removes the star from the screen
+    star.kill();
+
+     //  Add and update the score
+    score += 35;
+    scoreText.text = 'Score: ' + score;
+    if(score == 420){
+    	scoreText.text = 'Score: ' + score + ' you won bro';
+    	baddie.kill();
+    }
+
+}
+
+	function lose (player,baddie){
+		player.kill();
+		stars.kill();
+		scoreText.text = 'you lose try again press f5';
+		alert('you lose');
+	}
+</script>
+
+</body>
+</html>
