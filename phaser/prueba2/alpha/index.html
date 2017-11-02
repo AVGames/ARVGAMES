@@ -1,20 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8" />
-<title>Balies Pop</title>
-<script type="text/javascript" src="js/phaser.min.js"></script>
-<script type="text/javascript" src="js/boot.js"></script>
+	<meta charset="utf-8">
+	<title>ARVGames corporation</title>
+	<script type="text/javascript" src="js/phaser.min.js"></script>
+	<script type="text/javascript" src="js/phaser.js"></script>
+	<script type="text/javascript" src="js/boot.js"></script>
 </head>
 <body>
 
-<script type="text/javascript">
-	var balies = new Phaser.Game(800, 600, Phaser.AUTO, 'balies');
+	<script type="text/javascript">
+		var game = new Phaser.Game(800,600, Phaser.Auto, 'game');
 
-	balies.state.add('Boot', Boot);	
-	balies.state.start('Boot');
-	
-</script>
+		game.state.add('Boot', Boot, true);
+		game.state.start('Boot');
+
+	</script>
 
 </body>
 </html>
